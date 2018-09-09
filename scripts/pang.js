@@ -1,93 +1,73 @@
 $(document).ready(function () {
-    $("#difficulty").hide();
 
-    $(":button").css("background-color", "#4CAF50");
-    $(":button").css("border", "none");
-    $(":button").css("color", "white");
-    $(":button").css("padding", "15px 32px");
-    $(":button").css("text-align", "center");
-    $(":button").css("text-decoration", "none");
-    $(":button").css("display", "inline-block");
-    $(":button").css("font-size", "16px");
+    // This function defines music tracks playing in loop
 
+    function defineSound(path) {
+        action = new Audio(path);
+        action.volume = 0.5;
+        action.addEventListener('ended', function () {
+            this.currentTime = 0;
+            this.play();
+        }, false);
+        return action;
+    };
 
-    //Se definen variables y los sonidos con loop cuando sea necesario 
+    // Global variables
 
-    var colarray = new Array();
-    var ball = new Array();
-    var state = 0;
-    var score = 0;
-    var stage = 1;
-    var dead = false;
-    var hard;
-    titlesound = new Audio('audio/intro.mp3');
-    titlesound.volume = 0.5;
-    titlesound.addEventListener('ended', function () {
-        this.currentTime = 0;
-        this.play();
-    }, false);
+    let ball = new Array();
+    let state = 0;
+    let score = 0;
+    let stage = 1;
+    let dead = false;
+    let hard = 0;
 
-    gameplay = new Audio('audio/gameplay.mp3');
-    gameplay.volume = 0.5;
-    gameplay.addEventListener('ended', function () {
-        this.currentTime = 0;
-        this.play();
-    }, false);
+    // Sounds definitions
 
-    pass = new Audio('audio/passed.mp3');
-    pass.volume = 0.5;
-    pass.addEventListener('ended', function () {
-        this.currentTime = 0;
-        this.play();
-    }, false);
+    titlesound = defineSound('audio/intro.mp3')
+    gameplay = defineSound('audio/gameplay.mp3')
+    pass = defineSound('audio/passed.mp3')
 
+    // These sound effects don't need looping functionality
     scream = new Audio('audio/scream.mp3');
     endsound = new Audio('audio/end.mp3');
     pistol = new Audio('audio/shoot.mp3');
 
 
-    // El switch con los diferentes estados se ejecuta en un intervalo
+    // The check to see if we need to change state, is done every half second
 
     var t = setInterval(function () {
         switch (state) {
 
-        case 0:
-            //title screen
-            title();
-            break;
-        case 1:
-            //ready screen 
-            ready();
-            break;
-        case 2:
-            //game
-            game();
-            break;
+            case 0:
+                //title screen
+                title();
+                break;
+            case 1:
+                //ready screen 
+                ready();
+                break;
+            case 2:
+                //game
+                game();
+                break;
 
         }
 
     }, 500);
 
-    //función de título
+    // Title screen function
 
     function title() {
-
 
         titlesound.play();
         document.body.style.backgroundImage = "url('img/introtitle.png')";
         document.body.style.backgroundRepeat = "no-repeat";
         document.body.style.backgroundPosition = "center";
         $("#messages").html("PRESS SPACE TO START");
-        $("#messages").css("color", "red");
-        $("#messages").css("font-family", "sans-serif");
-        $("#messages").css("font-size", "1.5em");
-        $("#messages").css("width", "30%");
-        $("#messages").css("margin", "auto");
-        $("#messages").css("text-align", "center");
-        $('body').keyup(function (e) {
 
+        $('body').keyup(function (e) {
             if (e.keyCode == 32) {
-                $("#messages").html();
+                $("#messages").html("");
                 state = 1;
             }
         });
@@ -95,47 +75,31 @@ $(document).ready(function () {
 
     }
 
-    //Función ready/pantalla instrucciones. Esta función realmente no
-    //hace falta en esta versión, pero la he añadido para usarla en una futura
-    //versión mejorada del juego, donde se pueden dar instrucciones más completas
-    //con otras imágenes. 
-    //Actualmente, solo cambia una linea de texto
+    // Functions to pick difficulty level
+    // In the ready function, other options could be added
 
+
+    function difficultySelector(level) {
+        hard = level;
+        pistol.play();
+        setTimeout(function () {
+            state = 2
+        }, 1000);
+    }
     function ready() {
         $("#difficulty").show();
-        $("#difficulty").css("width", "50%");
-        $("#difficulty").css("margin-left", "35%");
-        $("#difficulty").css("margin-top", "1em");
-        $("#difficulty").css("float", "center");
-        $("#messages").css("width", "40%");
-        $("#messages").css("color", "green");
         $("#messages").html("Left/Right to control, 'Enter' to shoot <br> Pick your difficulty level");
 
         $('#easy').click(function () {
-
-            hard = 0;
-            pistol.play();
-            setTimeout(function () {
-                state = 2
-            }, 1000);
+            difficultySelector(0);
         });
 
         $('#hard').click(function () {
-
-            hard = 0.3;
-            pistol.play();
-            setTimeout(function () {
-                state = 2
-            }, 1000);
+            difficultySelector(0.3);
         });
 
         $('#lud').click(function () {
-
-            hard = 0.6;
-            pistol.play();
-            setTimeout(function () {
-                state = 2
-            }, 1000);
+            difficultySelector(0.6);
         });
     }
 
@@ -171,26 +135,7 @@ $(document).ready(function () {
         $("#messages").html("");
         $("#score").html("Score: " + score);
         $("#stage").html("Stage: " + stage);
-        $("#score").css("color", "white");
-        $("#score").css("background-color", "black");
-        $("#score").css("font-size", "2em");
-        $("#score").css("font-family", "sans-serif");
-        $("#score").css("border-radius", "15px");
-        $("#score").css("width", "25%");
-        $("#score").css("padding", "0.5em");
-        $("#score").css("float", "right");
-        $("#score").css("border-style", "solid");
-        $("#score").css("border-color", "red");
-        $("#stage").css("color", "white");
-        $("#stage").css("background-color", "black");
-        $("#stage").css("font-size", "2em");
-        $("#stage").css("font-family", "sans-serif");
-        $("#stage").css("border-radius", "15px");
-        $("#stage").css("width", "25%");
-        $("#stage").css("padding", "0.5em");
-        $("#stage").css("float", "left");
-        $("#stage").css("border-style", "solid");
-        $("#stage").css("border-color", "red");
+
 
         Physics(function (world) {
 
@@ -245,32 +190,32 @@ $(document).ready(function () {
 
                 switch (e.keyCode) {
 
-                case 37:
-                    //izquierda
-                    explorer.state.vel.set(-0.7, 0);
-                    explorer.state.pos.x = explorer.state.pos.x - 7;
+                    case 37:
+                        //izquierda
+                        explorer.state.vel.set(-0.7, 0);
+                        explorer.state.pos.x = explorer.state.pos.x - 7;
 
-                    explorer.view.src = 'img/left.png';
-                    break;
-                case 39:
-                    //derecha
-                    explorer.state.vel.set(0.7, 0);
-                    explorer.state.pos.x = explorer.state.pos.x + 7;
+                        explorer.view.src = 'img/left.png';
+                        break;
+                    case 39:
+                        //derecha
+                        explorer.state.vel.set(0.7, 0);
+                        explorer.state.pos.x = explorer.state.pos.x + 7;
 
-                    explorer.view.src = 'img/right.png';
-                    break;
+                        explorer.view.src = 'img/right.png';
+                        break;
 
-                case 13:
-                    //disparo       
-                    explorer.state.vel.set(0, 0);
-                    explorer.view.src = 'img/up.png';
-                    shoot();
-                    break;
+                    case 13:
+                        //disparo       
+                        explorer.state.vel.set(0, 0);
+                        explorer.view.src = 'img/up.png';
+                        shoot();
+                        break;
 
-                case 38:
-                    explorer.state.vel.set(0, 0);
-                    //arriba    
-                    explorer.view.src = 'img/up.png';
+                    case 38:
+                        explorer.state.vel.set(0, 0);
+                        //arriba    
+                        explorer.view.src = 'img/up.png';
 
                 }
 
@@ -319,7 +264,7 @@ $(document).ready(function () {
                             label: 'explorer'
                         }
                     }
-        , {
+                    , {
                         bodyB: {
                             label: 'ball'
                         },
@@ -327,7 +272,7 @@ $(document).ready(function () {
                             label: 'explorer'
                         }
                     }
-    ]
+                ]
             });
 
             world.on('collisions:detected', function (data, e) {
@@ -406,16 +351,16 @@ $(document).ready(function () {
                             bodyB: {
                                 label: 'bullet'
                             }
-                    }
-        , {
+                        }
+                        , {
                             bodyB: {
                                 label: 'ball'
                             },
                             bodyA: {
                                 label: 'bullet'
                             }
-                    }
-    ]
+                        }
+                    ]
                 });
 
 
@@ -444,8 +389,8 @@ $(document).ready(function () {
 
                             //si no quedan pelotas, subimos de nivel!!
                             if (world.find({
-                                    label: 'ball'
-                                }) == false) {
+                                label: 'ball'
+                            }) == false) {
                                 if (haslevelchanged == false) {
                                     level();
                                 }
@@ -490,14 +435,14 @@ $(document).ready(function () {
 
 
             world.add([
-//comportamientos. Algunos aplicados solo a ciertos objetos
-        Physics.behavior('constant-acceleration').applyTo(ball)
-        , Physics.behavior('body-impulse-response').applyTo(ball)
-        , Physics.behavior('body-collision-detection')
-        , Physics.behavior('sweep-prune')
-        , edgeBounce
+                //comportamientos. Algunos aplicados solo a ciertos objetos
+                Physics.behavior('constant-acceleration').applyTo(ball)
+                , Physics.behavior('body-impulse-response').applyTo(ball)
+                , Physics.behavior('body-collision-detection')
+                , Physics.behavior('sweep-prune')
+                , edgeBounce
 
-    ]);
+            ]);
 
 
             Physics.util.ticker.on(function (time) {
