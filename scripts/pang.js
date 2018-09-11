@@ -2,7 +2,7 @@ $(document).ready(function () {
 
     // This function defines music tracks playing in loop
 
-    function defineSound(path) {
+    function soundLoop(path) {
         action = new Audio(path);
         action.volume = 0.5;
         action.addEventListener('ended', function () {
@@ -12,7 +12,7 @@ $(document).ready(function () {
         return action;
     };
 
-    // Global variables
+    // Variables
 
     let ball = new Array();
     let state = 0;
@@ -20,22 +20,18 @@ $(document).ready(function () {
     let stage = 1;
     let dead = false;
     let hard = 0;
-
-    // Sounds definitions
-
-    titlesound = defineSound('audio/intro.mp3')
-    gameplay = defineSound('audio/gameplay.mp3')
-    pass = defineSound('audio/passed.mp3')
-
-    // These sound effects don't need looping functionality
-    scream = new Audio('audio/scream.mp3');
-    endsound = new Audio('audio/end.mp3');
-    pistol = new Audio('audio/shoot.mp3');
+    const titlesound = soundLoop('audio/intro.mp3')
+    const gameplay = soundLoop('audio/gameplay.mp3')
+    const pass = soundLoop('audio/passed.mp3')
+    const scream = new Audio('audio/scream.mp3');
+    const endsound = new Audio('audio/end.mp3');
+    const pistol = new Audio('audio/shoot.mp3');
+    const pop = new Audio('audio/pop.mp3');
 
 
-    // The check to see if we need to change state, is done every half second
+    // This controls the states before gameplay
 
-    var t = setInterval(function () {
+    const t = setInterval(function () {
         switch (state) {
 
             case 0:
@@ -59,25 +55,21 @@ $(document).ready(function () {
 
     function title() {
 
-        titlesound.play();
-        document.body.style.backgroundImage = "url('img/introtitle.png')";
-        document.body.style.backgroundRepeat = "no-repeat";
-        document.body.style.backgroundPosition = "center";
+        document.body.classList.add("titleScreen")
         $("#messages").html("PRESS SPACE TO START");
 
+        // Space key event
         $('body').keyup(function (e) {
             if (e.keyCode == 32) {
+                titlesound.play();
                 $("#messages").html("");
                 state = 1;
             }
         });
-
-
     }
 
     // Functions to pick difficulty level
     // In the ready function, other options could be added
-
 
     function difficultySelector(level) {
         hard = level;
@@ -86,7 +78,9 @@ $(document).ready(function () {
             state = 2
         }, 1000);
     }
+
     function ready() {
+
         $("#difficulty").show();
         $("#messages").html("Left/Right to control, 'Enter' to shoot <br> Pick your difficulty level");
 
@@ -104,72 +98,61 @@ $(document).ready(function () {
     }
 
 
-    //función principal del juego 
+    // Main gameplay function
 
     function game() {
 
-        //se preparan los div que se mostrarán y los sonidos
         $("#difficulty").hide();
-        pass.pause();
         $("#stage").show();
         $("#score").show();
+        pass.pause();
         titlesound.pause();
         gameplay.currentTime = 0;
         gameplay.play();
+        let haslevelchanged = false;
 
-        //apagamos el intervalo del switch. Ya no hace falta
+
+        // Interval to change state not needed anymore, since gameplay is the last stage
 
         clearInterval(t);
 
-        //imagen de fondo
+        // Background image changes according to the stage
+
         document.body.style.backgroundImage = "";
         document.body.style.backgroundImage = "url('img/" + stage + ".png')";
-        //audio que se ejecutará al romperse una bola
-        var pop = new Audio('audio/pop.mp3');
-        //variable para cambiar de nivel más tarde
-        var haslevelchanged = false;
-
-
-        //cambios en css. No he añadido archivo de css separado por ser solo esto 
 
         $("#messages").html("");
         $("#score").html("Score: " + score);
         $("#stage").html("Stage: " + stage);
 
-
         Physics(function (world) {
 
             var viewportBounds = Physics.aabb(0, 0, window.innerWidth, window.innerHeight),
                 edgeBounce, renderer;
-            //se crea el render
             renderer = Physics.renderer('canvas', {
                 el: 'viewport'
             });
-
 
             world.add(renderer);
             world.on('step', function () {
                 world.render();
             });
 
-            // se configuran los bordes para los rebotes
-
+            // This is the viewport edges for ball bouncing
             edgeBounce = Physics.behavior('edge-collision-detection', {
                 aabb: viewportBounds,
                 restitution: 0.99,
                 cof: 0.8
             });
 
-            //cambios de tamaño de la ventana
+            // Viewport will always be adjusted to the window size
             window.addEventListener('resize', function () {
-
                 viewportBounds = Physics.aabb(0, 0, renderer.width, renderer.height);
-
                 edgeBounce.setAABB(viewportBounds);
 
             }, true);
 
-            //se añade el personaje principal
+            // Main character
 
             var explorer = Physics.body('rectangle', {
                 x: 250,
@@ -181,32 +164,28 @@ $(document).ready(function () {
                 label: 'explorer'
             });
             explorer.view = new Image();
-            explorer.view.src = 'img/up.png';
+            explorer.view.src = 'img/left.png';
 
-
-            //lo controlamos mediante el teclado
 
             $('body').keydown(function (e) {
 
                 switch (e.keyCode) {
 
                     case 37:
-                        //izquierda
+                        //left
                         explorer.state.vel.set(-0.7, 0);
                         explorer.state.pos.x = explorer.state.pos.x - 7;
-
                         explorer.view.src = 'img/left.png';
                         break;
                     case 39:
-                        //derecha
+                        //right
                         explorer.state.vel.set(0.7, 0);
                         explorer.state.pos.x = explorer.state.pos.x + 7;
-
                         explorer.view.src = 'img/right.png';
                         break;
 
                     case 13:
-                        //disparo       
+                        //shoot      
                         explorer.state.vel.set(0, 0);
                         explorer.view.src = 'img/up.png';
                         shoot();
@@ -214,7 +193,7 @@ $(document).ready(function () {
 
                     case 38:
                         explorer.state.vel.set(0, 0);
-                        //arriba    
+                        //up with no shooting   
                         explorer.view.src = 'img/up.png';
 
                 }
@@ -223,11 +202,11 @@ $(document).ready(function () {
 
             world.add(explorer);
 
-            //el número de bolas del nivel dependerá de en qué pantalla estamos
+            // Amount of balls depend on the stage where we are
 
             var balls = 0;
             while (balls < stage) {
-                //bola principal
+                // Main ball
                 var b = Physics.body('circle', {
                     x: Math.random() * window.innerWwidth,
                     y: renderer.height * 0.3,
@@ -250,9 +229,7 @@ $(document).ready(function () {
                 balls++;
             }
 
-
-
-            //colisiones entre las bolas y el explorador
+            // Collision between ball and explorer
 
             var query = Physics.query({
                 $or: [
@@ -279,36 +256,26 @@ $(document).ready(function () {
                 var found = Physics.util.find(data.collisions, query);
                 if (found) {
 
-                    //variable muerto, y se activan sonidos y mensajes
+                    // You are now dead 
+
                     dead = true;
                     gameplay.pause();
                     scream.play();
                     endsound.play();
-                    $("#messages").css("color", "red");
-                    $("#messages").css("font-size", "5em");
-                    $("#messages").css("width", "50%");
-                    $("#messages").css("margin", "auto");
-                    $("#messages").css("font-weight", "bold");
                     $("#stage").hide();
                     $("#score").hide();
                     $("#messages").html("GAME OVER");
                     world.remove(explorer);
 
-
-                    //actualizamos la ventana. 
-                    //Más rápido que borrar el canvas y empezar de nuevo!!
-
                     setTimeout(function () {
-
                         window.location.reload();
                     }, 3000);
-
                 }
             });
 
-
             function shoot() {
-                //se crean las balas
+                // Bullets are created
+
                 var projectile = Physics.body('circle', {
                     x: explorer.state.pos.x,
                     y: explorer.state.pos.y - (explorer.height - 5),
@@ -326,13 +293,14 @@ $(document).ready(function () {
                 });
                 explorer.state.vel.set(0, 0);
 
-                //solo puede disparar si está vivo
+                // Can only shoot if you are alive
+
                 if (dead == false) {
                     world.add(projectile);
                     pistol.play();
                 }
 
-                //vamos eliminando las balas para no sobrecargar. 
+                // We remove extra bullets outside the viewport to don't overload
 
                 var clearbullet = setInterval(function () {
                     if (projectile.state.pos.y < window.innerHeight - window.innerHeight + 20) {
@@ -341,7 +309,7 @@ $(document).ready(function () {
 
                 }, 100)
 
-                //colisiones entre balas y pelotas
+                // Collision between bullet and ball
                 var query = Physics.query({
                     $or: [
                         {
@@ -363,31 +331,25 @@ $(document).ready(function () {
                     ]
                 });
 
-
-
-
                 world.on('collisions:detected', function (data, e) {
-
 
                     var found = Physics.util.find(data.collisions, query);
 
-
-
                     if (found) {
 
-                        score = score + 1;
+                        score++;
                         $("#score").html("Score: " + score);
-                        //eliminamos la bala
+                        // Remove bullet from world
                         world.remove(found.bodyA);
                         pop.play();
 
-                        //reducimos la bola principal
+                        // Split main ball
                         found.bodyB.geometry.radius = (found.bodyB.geometry.radius / 2);
-                        //según el tamaño en el que queda, directamente la quitamos
+                        // If ball is too small, we remove it
                         if (found.bodyB.geometry.radius < 10) {
                             world.remove(found.bodyB);
 
-                            //si no quedan pelotas, subimos de nivel!!
+                            // If no balls are left, we level up!
                             if (world.find({
                                 label: 'ball'
                             }) == false) {
@@ -397,12 +359,12 @@ $(document).ready(function () {
                             }
                         }
 
-                        //sin estas dos lineas, el tamaño no se actualiza
+                        // Update ball to new size
                         found.bodyB.view = null;
                         found.bodyB.recalc();
 
 
-                        //creamos una nueva pelota "split" de la anterior
+                        // Creation of split ball
                         b = Physics.body('circle', {
                             x: found.bodyB.state.pos.x,
                             y: found.bodyB.state.pos.y,
@@ -420,7 +382,7 @@ $(document).ready(function () {
                         });
 
 
-                        //pero solo la añadimos si el tamaño resultante es > 10
+                        // We just want to split balls if size is above 10
                         if (b.geometry.radius > 10) {
 
                             ball.push(b);
@@ -435,7 +397,8 @@ $(document).ready(function () {
 
 
             world.add([
-                //comportamientos. Algunos aplicados solo a ciertos objetos
+                // Some physics behaviors
+
                 Physics.behavior('constant-acceleration').applyTo(ball)
                 , Physics.behavior('body-impulse-response').applyTo(ball)
                 , Physics.behavior('body-collision-detection')
@@ -452,7 +415,7 @@ $(document).ready(function () {
         });
 
 
-        //variables del cambio de nivel
+        // Level up function
 
         function level() {
 
@@ -460,15 +423,11 @@ $(document).ready(function () {
             stage = stage + 1;
 
             if (stage > 3) {
-                //solo tenemos 3 niveles. Si se acaba, se ejecuta el final del juego
                 endgame();
             } else {
-
                 console.log("level up!");
                 console.log(stage);
                 $("#stage").html("Stage: " + stage);
-
-                //si es nivel < 3, iniciamos otra partida con variables de nuevo nivel
                 setTimeout(game, 2000);
 
             }
@@ -476,12 +435,10 @@ $(document).ready(function () {
         }
     }
 
-
-
     scratch = Physics.scratchpad();
     scratch.done();
 
-    //función de fin de juego (al acabar el nivel 3)
+    // Endgame (when you finish level 3)
 
     function endgame() {
         gameplay.pause();

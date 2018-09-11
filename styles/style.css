@@ -1,5 +1,7 @@
 .titleScreen {
-
+background-image: url('../img/introtitle.png');
+background-repeat: no-repeat;
+background-position: center;
 }
 
 .stageone {
